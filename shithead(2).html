@@ -15,6 +15,7 @@
   --gold:#f0c040;--red:#cc2222;
   --tl:rgba(255,255,255,0.88);--td:rgba(255,255,255,0.42);
   --scale:1;
+  --ui-scale:1;
 }
 html,body{width:100%;height:100%;overflow:hidden;font-family:'Cinzel',serif;background:var(--felt-d);color:var(--tl);user-select:none}
 .hidden{display:none!important}
@@ -1035,6 +1036,26 @@ button{
 @media(max-width:400px){:root{--cw:46px;--ch:66px}}
 
 /* ═══════════════════════════════════════════════════════
+   UI SCALE  — all UI chrome scales with --ui-scale
+   Cards are controlled separately by --cw/--ch (card scale)
+═══════════════════════════════════════════════════════ */
+button{font-size:calc(11px * var(--ui-scale));padding:calc(9px * var(--ui-scale)) calc(20px * var(--ui-scale))}
+#top-bar{height:calc(40px * var(--ui-scale))}
+#direction-label{font-size:calc(9px * var(--ui-scale));letter-spacing:calc(2.5px * var(--ui-scale))}
+.ts-player{font-size:calc(9px * var(--ui-scale));padding:calc(2px * var(--ui-scale)) calc(9px * var(--ui-scale))}
+#log-text{font-size:calc(10px * var(--ui-scale))}
+#deck-count-lbl{font-size:calc(11px * var(--ui-scale))}
+.tbar-btn{font-size:calc(9px * var(--ui-scale));padding:calc(4px * var(--ui-scale)) calc(12px * var(--ui-scale))}
+.player-name{font-size:calc(9px * var(--ui-scale))}
+.badge{font-size:calc(9px * var(--ui-scale));padding:calc(1px * var(--ui-scale)) calc(7px * var(--ui-scale))}
+#status-bar{height:calc(22px * var(--ui-scale))}
+#status-text{font-size:calc(9px * var(--ui-scale))}
+#btn-sort-hand{font-size:calc(9px * var(--ui-scale));padding:calc(6px * var(--ui-scale)) calc(12px * var(--ui-scale))}
+#human-area{padding:calc(10px * var(--ui-scale)) 8px calc(8px * var(--ui-scale));gap:calc(7px * var(--ui-scale))}
+/* history panel offset tracks scaled top-bar */
+#history-panel{top:calc(40px * var(--ui-scale));max-height:calc(100vh - 40px * var(--ui-scale))}
+
+/* ═══════════════════════════════════════════════════════
    CLASSIC THEME  —  data-theme="classic" on <html>
 ═══════════════════════════════════════════════════════ */
 
@@ -1365,6 +1386,11 @@ button{
           <option value="new">The Green Room</option>
           <option value="classic">Classic</option>
         </select>
+      </div>
+      <div class="s-row">
+        <label>UI Scale</label>
+        <input type="range" id="set-ui-scale" min="75" max="150" value="100" step="5">
+        <span class="scale-val" id="set-ui-scale-val">100%</span>
       </div>
       <div class="s-row">
         <label>Card Scale</label>
@@ -2834,7 +2860,26 @@ window.addEventListener('DOMContentLoaded',function(){
     if(e.target===this) this.classList.add('hidden');
   });
 
-  // Scale slider
+  // UI scale slider
+  const uiScaleSlider=document.getElementById('set-ui-scale');
+  const uiScaleVal=document.getElementById('set-ui-scale-val');
+  uiScaleSlider.addEventListener('input',function(){
+    const v=parseInt(this.value)/100;
+    uiScaleVal.textContent=this.value+'%';
+    document.documentElement.style.setProperty('--ui-scale',v);
+    try{localStorage.setItem('shithead-ui-scale',this.value);}catch(e){}
+  });
+  // Restore saved UI scale
+  try{
+    const savedUI=localStorage.getItem('shithead-ui-scale');
+    if(savedUI){
+      uiScaleSlider.value=savedUI;
+      uiScaleVal.textContent=savedUI+'%';
+      document.documentElement.style.setProperty('--ui-scale',parseInt(savedUI)/100);
+    }
+  }catch(e){}
+
+  // Card scale slider
   const scaleSlider=document.getElementById('set-scale');
   const scaleVal=document.getElementById('set-scale-val');
   scaleSlider.addEventListener('input',function(){

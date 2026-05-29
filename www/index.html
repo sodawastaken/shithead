@@ -584,6 +584,13 @@ button{
 
 /* Title */
 .menu-title-block{text-align:center}
+.menu-logo{
+  width:clamp(160px,28vw,240px);
+  height:auto;
+  display:block;
+  margin:0 auto 8px;
+  filter:drop-shadow(0 4px 24px rgba(0,0,0,0.55)) drop-shadow(0 0 60px rgba(240,192,64,0.08));
+}
 .menu-suit-row{
   display:block;
   font-size:16px;letter-spacing:22px;margin-left:22px;
@@ -984,6 +991,38 @@ button{
 @media(max-width:600px){#emote-panel{width:220px}.emote-btn{font-size:18px}}
 @media(max-width:400px){:root{--cw:46px;--ch:66px}}
 
+/* ── Landscape phone layout ── */
+@media(orientation:landscape) and (max-height:500px){
+  :root{--cw:44px;--ch:63px;--cr:5px}
+  #top-bar{
+    height:32px;
+    padding-left:calc(12px + env(safe-area-inset-left));
+    padding-right:calc(12px + env(safe-area-inset-right));
+  }
+  #status-bar{display:none}
+  #ai-top{
+    padding-top:2px;
+    padding-left:calc(8px + env(safe-area-inset-left));
+    padding-right:calc(8px + env(safe-area-inset-right));
+    gap:10px;
+  }
+  #table-row{
+    padding-left:calc(4px + env(safe-area-inset-left));
+    padding-right:calc(4px + env(safe-area-inset-right));
+  }
+  #human-area{
+    padding:5px calc(8px + env(safe-area-inset-right)) calc(4px + env(safe-area-inset-bottom)) calc(8px + env(safe-area-inset-left));
+    gap:4px;
+  }
+  #ai-left,#ai-right{min-width:70px;gap:4px}
+  .card.mini{width:32px;height:46px}
+  #action-buttons{gap:5px}
+  button{padding:5px 9px;font-size:9px}
+  .card-row.fan-hand{height:calc(var(--ch) + 20px)}
+  .card-row.fan-hand.ai-fan{height:calc(var(--ch)*0.7 + 16px)}
+  .tstack{height:calc(var(--ch) + 8px)}
+}
+
 /* ═══════════════════════════════════════════════════════
    CLASSIC THEME  —  data-theme="classic" on <html>
 ═══════════════════════════════════════════════════════ */
@@ -1187,8 +1226,7 @@ button{
   <!-- Hero content -->
   <div class="menu-hero">
     <div class="menu-title-block">
-      <span class="menu-suit-row">♠&nbsp;&nbsp;♥&nbsp;&nbsp;♦&nbsp;&nbsp;♣</span>
-      <span class="menu-main-title">SHITHEAD</span>
+      <img src="logo.svg" alt="Shithead" class="menu-logo">
       <span class="menu-subtitle">The card game of strategy, spite &amp; shame</span>
     </div>
 
@@ -1670,8 +1708,8 @@ function doPlay(G,p,cards){
 function applyScale(){
   const s=CFG.scale/100;
   document.documentElement.style.setProperty('--scale',s);
-  // We scale card sizes directly via CSS vars
-  const baseCW=78,baseCH=110;
+  const landscape=window.innerWidth>window.innerHeight&&window.innerHeight<500;
+  const baseCW=landscape?44:78, baseCH=landscape?63:110;
   document.documentElement.style.setProperty('--cw',Math.round(baseCW*s)+'px');
   document.documentElement.style.setProperty('--ch',Math.round(baseCH*s)+'px');
 }
@@ -2772,6 +2810,14 @@ window.addEventListener('DOMContentLoaded',function(){
   // Build effect selects
   buildSettingSelects();
   renderHistory();
+
+  // Re-apply scale and re-render on orientation change (landscape ↔ portrait)
+  window.addEventListener('orientationchange',function(){
+    setTimeout(function(){applyScale();if(G)renderAll();},150);
+  });
+  window.addEventListener('resize',function(){
+    applyScale();if(G)renderAll();
+  });
 });
 
 // ── Emote / Quick-Chat ───────────────────────────────────────────

@@ -1404,6 +1404,13 @@ button{font-size:calc(11px * var(--ui-scale));padding:calc(9px * var(--ui-scale)
           <option value="fan">Fan (Angled)</option>
         </select>
       </div>
+      <div class="s-row">
+        <label>Sound FX</label>
+        <select id="set-sfx">
+          <option value="on">On</option>
+          <option value="off">Off</option>
+        </select>
+      </div>
     </div>
 
     <div class="s-section">
@@ -1641,6 +1648,7 @@ function deal(G){
   }
   G.log='Swap hand ↔ face-up cards, then click Done Swapping.';
   currentRoundEvents=[];
+  SFX.deal(G.ps.length);
 }
 
 // ── Helpers ──────────────────────────────────────────────────────
@@ -1742,6 +1750,147 @@ function doPlay(G,p,cards){
   markOut(G,p);
   return{burned,again,skip};
 }
+
+// ── Sound FX ─────────────────────────────────────────────────────
+const SFX=(function(){
+  let _ctx=null;
+  let on=true;
+  function ac(){
+    if(!_ctx) _ctx=new(window.AudioContext||window.webkitAudioContext)();
+    if(_ctx.state==='suspended') _ctx.resume();
+    return _ctx;
+  }
+  function go(fn){if(!on)return;try{fn(ac());}catch(e){}}
+
+  function noise(ctx,dur){
+    const b=ctx.createBuffer(1,ctx.sampleRate*dur,ctx.sampleRate);
+    const d=b.getChannelData(0);
+    for(let i=0;i<d.length;i++) d[i]=Math.random()*2-1;
+    const s=ctx.createBufferSource();s.buffer=b;return s;
+  }
+
+  return{
+    cardPlay(){go(function(c){
+      const t=c.currentTime;
+      // thud
+      const o=c.createOscillator(),g=c.createGain();
+      o.frequency.setValueAtTime(200,t);o.frequency.exponentialRampToValueAtTime(55,t+0.07);
+      g.gain.setValueAtTime(0.38,t);g.gain.exponentialRampToValueAtTime(0.001,t+0.09);
+      o.connect(g);g.connect(c.destination);o.start(t);o.stop(t+0.1);
+      // click
+      const n=noise(c,0.035),f=c.createBiquadFilter(),ng=c.createGain();
+      f.type='bandpass';f.frequency.value=2800;f.Q.value=0.9;
+      ng.gain.setValueAtTime(0.28,t);ng.gain.exponentialRampToValueAtTime(0.001,t+0.035);
+      n.connect(f);f.connect(ng);ng.connect(c.destination);n.start(t);
+    })},
+    cardFlip(){go(function(c){
+      const t=c.currentTime;
+      const n=noise(c,0.025),f=c.createBiquadFilter(),g=c.createGain();
+      f.type='bandpass';f.frequency.value=3400;f.Q.value=1.1;
+      g.gain.setValueAtTime(0.18,t);g.gain.exponentialRampToValueAtTime(0.001,t+0.025);
+      n.connect(f);f.connect(g);g.connect(c.destination);n.start(t);
+      const o=c.createOscillator(),og=c.createGain();
+      o.frequency.setValueAtTime(260,t);o.frequency.exponentialRampToValueAtTime(130,t+0.045);
+      og.gain.setValueAtTime(0.1,t);og.gain.exponentialRampToValueAtTime(0.001,t+0.05);
+      o.connect(og);og.connect(c.destination);o.start(t);o.stop(t+0.055);
+    })},
+    pickup(){go(function(c){
+      const t=c.currentTime;
+      const n=noise(c,0.22),f=c.createBiquadFilter(),g=c.createGain();
+      f.type='lowpass';
+      f.frequency.setValueAtTime(3200,t);f.frequency.exponentialRampToValueAtTime(280,t+0.2);
+      g.gain.setValueAtTime(0.0,t);g.gain.linearRampToValueAtTime(0.32,t+0.025);
+      g.gain.exponentialRampToValueAtTime(0.001,t+0.22);
+      n.connect(f);f.connect(g);g.connect(c.destination);n.start(t);
+    })},
+    burn(){go(function(c){
+      const t=c.currentTime;
+      const n=noise(c,0.34),f=c.createBiquadFilter(),g=c.createGain();
+      f.type='highpass';
+      f.frequency.setValueAtTime(220,t);f.frequency.exponentialRampToValueAtTime(4500,t+0.28);
+      g.gain.setValueAtTime(0.0,t);g.gain.linearRampToValueAtTime(0.42,t+0.03);
+      g.gain.exponentialRampToValueAtTime(0.001,t+0.34);
+      n.connect(f);f.connect(g);g.connect(c.destination);n.start(t);
+      const o=c.createOscillator(),og=c.createGain();
+      o.frequency.setValueAtTime(85,t);o.frequency.exponentialRampToValueAtTime(28,t+0.3);
+      og.gain.setValueAtTime(0.48,t);og.gain.exponentialRampToValueAtTime(0.001,t+0.3);
+      o.connect(og);og.connect(c.destination);o.start(t);o.stop(t+0.32);
+    })},
+    quad(){go(function(c){
+      const t=c.currentTime;
+      const n=noise(c,0.5),lp=c.createBiquadFilter(),g=c.createGain();
+      lp.type='lowpass';lp.frequency.value=900;
+      g.gain.setValueAtTime(0.65,t);g.gain.exponentialRampToValueAtTime(0.001,t+0.5);
+      n.connect(lp);lp.connect(g);g.connect(c.destination);n.start(t);
+      const o=c.createOscillator(),og=c.createGain();
+      o.type='sawtooth';o.frequency.setValueAtTime(68,t);o.frequency.exponentialRampToValueAtTime(22,t+0.42);
+      og.gain.setValueAtTime(0.45,t);og.gain.exponentialRampToValueAtTime(0.001,t+0.42);
+      o.connect(og);og.connect(c.destination);o.start(t);o.stop(t+0.44);
+    })},
+    skip(){go(function(c){
+      const t=c.currentTime;
+      const o=c.createOscillator(),g=c.createGain();
+      o.type='square';
+      o.frequency.setValueAtTime(920,t);o.frequency.exponentialRampToValueAtTime(290,t+0.13);
+      g.gain.setValueAtTime(0.18,t);g.gain.exponentialRampToValueAtTime(0.001,t+0.13);
+      o.connect(g);g.connect(c.destination);o.start(t);o.stop(t+0.14);
+    })},
+    reverse(){go(function(c){
+      const t=c.currentTime;
+      const o=c.createOscillator(),g=c.createGain();
+      o.frequency.setValueAtTime(290,t);o.frequency.linearRampToValueAtTime(620,t+0.09);
+      o.frequency.linearRampToValueAtTime(290,t+0.18);
+      g.gain.setValueAtTime(0.14,t);g.gain.setValueAtTime(0.14,t+0.09);
+      g.gain.exponentialRampToValueAtTime(0.001,t+0.2);
+      o.connect(g);g.connect(c.destination);o.start(t);o.stop(t+0.21);
+    })},
+    deal(players){
+      const total=Math.min(players*3,9);
+      for(let i=0;i<total;i++) setTimeout(()=>this.cardFlip(),i*55);
+    },
+    click(){go(function(c){
+      const t=c.currentTime;
+      const o=c.createOscillator(),g=c.createGain();
+      o.frequency.value=820;
+      g.gain.setValueAtTime(0.07,t);g.gain.exponentialRampToValueAtTime(0.001,t+0.038);
+      o.connect(g);g.connect(c.destination);o.start(t);o.stop(t+0.04);
+    })},
+    swap(){go(function(c){
+      const t=c.currentTime;
+      [440,580].forEach(function(freq,i){
+        const o=c.createOscillator(),g=c.createGain();
+        const st=t+i*0.03;
+        o.frequency.value=freq;
+        g.gain.setValueAtTime(0.09,st);g.gain.exponentialRampToValueAtTime(0.001,st+0.08);
+        o.connect(g);g.connect(c.destination);o.start(st);o.stop(st+0.09);
+      });
+    })},
+    win(){go(function(c){
+      const t=c.currentTime;
+      [523,659,784,1047].forEach(function(freq,i){
+        const o=c.createOscillator(),g=c.createGain();
+        const st=t+i*0.13;
+        g.gain.setValueAtTime(0.0,st);g.gain.linearRampToValueAtTime(0.22,st+0.02);
+        g.gain.exponentialRampToValueAtTime(0.001,st+0.32);
+        o.frequency.value=freq;
+        o.connect(g);g.connect(c.destination);o.start(st);o.stop(st+0.34);
+      });
+    })},
+    lose(){go(function(c){
+      const t=c.currentTime;
+      [392,349,311,262].forEach(function(freq,i){
+        const o=c.createOscillator(),g=c.createGain();
+        const st=t+i*0.16;
+        g.gain.setValueAtTime(0.0,st);g.gain.linearRampToValueAtTime(0.18,st+0.02);
+        g.gain.exponentialRampToValueAtTime(0.001,st+0.38);
+        o.frequency.value=freq;
+        o.connect(g);g.connect(c.destination);o.start(st);o.stop(st+0.4);
+      });
+    })},
+    setEnabled(v){on=v;try{localStorage.setItem('shithead-sfx',v?'1':'0');}catch(e){}},
+    get enabled(){return on;}
+  };
+})();
 
 // ── Rendering ────────────────────────────────────────────────────
 function applyScale(){
@@ -2065,6 +2214,7 @@ function clickHand(i){
     G.ps[0].fu[swapFIdx]=tmp;
     G.ps[0].hand[hi].up=true;G.ps[0].fu[swapFIdx].up=true;
     selH.clear();selF.clear();
+    SFX.swap();
   }
   renderAll();
 }
@@ -2080,6 +2230,7 @@ function clickFU(i){
     G.ps[0].fu[swapFIdx]=tmp;
     G.ps[0].hand[hi].up=true;G.ps[0].fu[swapFIdx].up=true;
     selH.clear();selF.clear();
+    SFX.swap();
   }
   renderAll();
 }
@@ -2124,6 +2275,7 @@ function humanPlay(){
   if(!cards.every(c=>c.r===cards[0].r&&canPlay(c,G))) return;
   selH.clear();selF.clear();
   logPlay(G,p,cards);
+  SFX.cardPlay();
 
   animCardPlay(function(){
     const res=doPlay(G,p,cards);
@@ -2131,11 +2283,14 @@ function humanPlay(){
     renderAll();
     if(res.burned){
       const isQuad=check4BeforePlay(cards);
+      if(isQuad) SFX.quad(); else SFX.burn();
       animBurn(isQuad,function(){
         if(!res.again||p.out) advance(G,1);
         renderAll();schedAI();
       });
     } else {
+      if(res.skip>0) SFX.skip();
+      else if(cards[0].r===getRankFX('reverse')) SFX.reverse();
       advance(G,1+res.skip);renderAll();schedAI();
     }
   });
@@ -2147,6 +2302,7 @@ function humanPickup(){
   if(phase(p)==='bl') return;
   if(!G.pile.length) return;
   selH.clear();selF.clear();
+  SFX.pickup();
   animPickup(function(){
     pickUp(G,p);advance(G,1);renderAll();schedAI();
     // Random active bot might taunt
@@ -2166,10 +2322,12 @@ function humanFlip(){
   const ok=canPlay(card,G);
   p.bl.pop();card.up=true;
   G.pile.push(card);updEff(G);
+  SFX.cardFlip();
   if(!ok){
     logFlip(G,p,card,false);
     renderAll();
     setTimeout(function(){
+      SFX.pickup();
       animPickup(function(){
         pickUp(G,p);advance(G,1);renderAll();schedAI();
       });
@@ -2365,9 +2523,11 @@ function runAI(){
     const card=p.bl[p.bl.length-1];
     const ok=canPlay(card,G);
     p.bl.pop();card.up=true;G.pile.push(card);updEff(G);
+    SFX.cardFlip();
     logFlip(G,p,card,ok);
     if(!ok){
       botSituationEmote(p,'pickup',0.68);
+      SFX.pickup();
       pickUp(G,p);advance(G,1);renderAll();schedAI();return;
     }
     let burned=false,again=false,skip=0;
@@ -2381,9 +2541,12 @@ function runAI(){
       else if(r===getRankFX('burn10')){burned=true;again=true;}
     }
     if(burned){
-      botSituationEmote(p,check4(G)?'quad':'burn',0.72);
+      const isQ=check4(G);
+      botSituationEmote(p,isQ?'quad':'burn',0.72);
+      if(isQ) SFX.quad(); else SFX.burn();
       burn(G);
-    }
+    } else if(skip>0){ SFX.skip(); }
+    else if(card.r===getRankFX('reverse')){ SFX.reverse(); }
     const wasOut=p.out;
     markOut(G,p);
     if(!wasOut&&p.out) botSituationEmote(p,'finish',0.9);
@@ -2399,6 +2562,7 @@ function runAI(){
     if(!G.pile.length){setLog(G,p.name+' passes.');}
     else{
       botSituationEmote(p,'pickup',0.62);
+      SFX.pickup();
       pickUp(G,p);
     }
     advance(G,1);renderAll();schedAI();return;
@@ -2411,18 +2575,23 @@ function runAI(){
   const playIsReverse= r0===getRankFX('reverse');
   const playIsQuad   = check4BeforePlay(cards);
 
+  SFX.cardPlay();
   logPlay(G,p,cards);
   const res=doPlay(G,p,cards);
 
   // Fire situation emote based on what just happened
   if(playIsQuad){
     botSituationEmote(p,'quad',0.95);
+    SFX.quad();
   } else if(res.burned&&playIsBurn){
     botSituationEmote(p,'burn',0.72);
+    SFX.burn();
   } else if(playIsSkip&&res.skip>0){
     botSituationEmote(p,'skip',0.65);
+    SFX.skip();
   } else if(playIsReverse){
     botSituationEmote(p,'reverse',0.5);
+    SFX.reverse();
   }
 
   // Finish emote — p.out set to true by markOut inside doPlay
@@ -2677,7 +2846,8 @@ function endGame(){
   document.getElementById('go-title').textContent=h.pos===G.ps.length?"You're the Shithead! 💩":'Game Over!';
 
   // Winner confetti if human wins
-  if(h.pos===1){ spawnConfetti(); spawnConfetti(); }
+  if(h.pos===1){ spawnConfetti(); spawnConfetti(); SFX.win(); }
+  else if(h.pos===G.ps.length){ SFX.lose(); }
 
   const oo=document.getElementById('go-order');oo.innerHTML='';
   const labs=['1st','2nd','3rd','4th','5th','6th'];
@@ -2894,6 +3064,18 @@ window.addEventListener('DOMContentLoaded',function(){
     CFG.handMode=this.value;
     if(G) renderHuman();
   });
+
+  // Sound FX toggle
+  const sfxSel=document.getElementById('set-sfx');
+  sfxSel.addEventListener('change',function(){SFX.setEnabled(this.value==='on');});
+  try{const s=localStorage.getItem('shithead-sfx');if(s==='0'){SFX.setEnabled(false);sfxSel.value='off';}}catch(e){}
+
+  // Button click sounds (delegated; skip buttons that have their own sounds)
+  document.addEventListener('click',function(e){
+    const b=e.target.closest('button');
+    if(!b||['btn-play','btn-pickup'].includes(b.id)) return;
+    SFX.click();
+  },true);
 
   // Theme selector
   function applyTheme(theme){

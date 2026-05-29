@@ -1,0 +1,11 @@
+{
+  "appId": "com.sodawastaken.shithead",
+  "appName": "Shithead",
+  "webDir": "www",
+  "server": {
+    "allowNavigation": []
+  },
+  "ios": {
+    "contentInset": "always"
+  }
+}

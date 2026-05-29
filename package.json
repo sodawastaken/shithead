@@ -1,0 +1,29 @@
+{
+  "name": "shithead",
+  "version": "1.0.0",
+  "description": "A fully playable browser-based implementation of the card game **Shithead**, built as a single self-contained HTML file. No server, no build step — just open `shithead(2).html` in a browser.",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/sodawastaken/shithead.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/sodawastaken/shithead/issues"
+  },
+  "homepage": "https://github.com/sodawastaken/shithead#readme",
+  "dependencies": {
+    "@capacitor/cli": "^8.3.4",
+    "@capacitor/core": "^8.3.4",
+    "@capacitor/ios": "^8.3.4"
+  },
+  "devDependencies": {
+    "@capacitor/assets": "^3.0.5"
+  }
+}

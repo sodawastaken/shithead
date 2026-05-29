@@ -18,6 +18,7 @@
   --gold:#f0c040;--red:#cc2222;
   --tl:rgba(255,255,255,0.88);--td:rgba(255,255,255,0.42);
   --scale:1;
+  --ui-scale:1;
   /* iOS safe areas */
   --sat:env(safe-area-inset-top);
   --sab:env(safe-area-inset-bottom);
@@ -490,6 +491,64 @@ button{
 }
 #btn-restart:hover{background:#f8d060;transform:translateY(-2px)}
 #btn-restart:active{transform:translateY(1px);box-shadow:0 1px 0 #a87c00}
+
+/* ── Game Over Avatar Panel ── */
+#go-avatars{
+  display:flex;gap:10px;justify-content:center;
+  flex-wrap:wrap;width:100%;
+  padding:6px 0 2px;
+  border-top:1px solid rgba(240,192,64,0.1);
+  border-bottom:1px solid rgba(240,192,64,0.1);
+}
+.go-av-slot{
+  display:flex;flex-direction:column;align-items:center;gap:5px;
+  min-width:48px;position:relative;
+}
+.go-av{
+  width:44px;height:44px;border-radius:50%;
+  background:rgba(255,255,255,0.04);
+  border:1px solid rgba(240,192,64,0.18);
+  display:flex;align-items:center;justify-content:center;
+  font-family:'Cinzel',serif;font-size:17px;font-weight:700;
+  color:rgba(240,192,64,0.7);
+  transition:box-shadow 0.3s,border-color 0.3s;
+  position:relative;
+}
+.go-av.av-human{font-size:20px;border-color:rgba(240,192,64,0.35);background:rgba(240,192,64,0.06)}
+.go-av.av-winner{border-color:rgba(240,192,64,0.7);background:rgba(240,192,64,0.1);box-shadow:0 0 16px rgba(240,192,64,0.3)}
+.go-av.av-shit{border-color:rgba(220,80,80,0.45);background:rgba(220,80,80,0.06);color:rgba(220,80,80,0.7)}
+.go-av-name{
+  font-family:'Cinzel',serif;font-size:8px;font-weight:600;
+  color:rgba(255,255,255,0.35);letter-spacing:1.5px;text-transform:uppercase;
+  text-align:center;max-width:52px;
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+}
+/* Emote bubble anchored to top-right of avatar circle */
+.go-av-emote{
+  position:absolute;top:-10px;right:-14px;
+  font-size:18px;line-height:1;z-index:10;pointer-events:none;
+  animation:go-emote-pop 0.3s cubic-bezier(0.34,1.56,0.64,1) forwards;
+}
+.go-av-emote.is-text{
+  font-family:'Cinzel',serif;font-size:9px;font-weight:700;
+  background:rgba(5,14,7,0.97);
+  border:1px solid rgba(240,192,64,0.3);
+  border-radius:8px;padding:3px 7px;
+  color:var(--tl);white-space:nowrap;letter-spacing:0.5px;
+  top:-18px;right:-6px;font-size:9px;
+}
+@keyframes go-emote-pop{
+  0%{transform:scale(0.4);opacity:0}
+  70%{transform:scale(1.18)}
+  100%{transform:scale(1);opacity:1}
+}
+/* Classic theme */
+[data-theme="classic"] #go-avatars{border-color:rgba(255,255,255,0.08)}
+[data-theme="classic"] .go-av{font-family:'Segoe UI',system-ui,sans-serif;border-color:rgba(255,255,255,0.14);background:rgba(255,255,255,0.04)}
+[data-theme="classic"] .go-av.av-winner{border-color:rgba(240,192,64,0.5)}
+[data-theme="classic"] .go-av.av-shit{border-color:rgba(220,80,80,0.35)}
+[data-theme="classic"] .go-av-name{font-family:'Segoe UI',system-ui,sans-serif;letter-spacing:0.5px}
+[data-theme="classic"] .go-av-emote.is-text{font-family:'Segoe UI',system-ui,sans-serif}
 
 @media(max-width:600px){
   :root{--cw:56px;--ch:80px;--cr:6px}
@@ -984,6 +1043,27 @@ button{
 @media(max-width:600px){#emote-panel{width:220px}.emote-btn{font-size:18px}}
 @media(max-width:400px){:root{--cw:46px;--ch:66px}}
 
+/* ═══════════════════════════════════════════════════════
+   UI SCALE  — all UI chrome scales with --ui-scale
+   Cards are controlled separately by --cw/--ch (card scale)
+═══════════════════════════════════════════════════════ */
+button{font-size:calc(11px * var(--ui-scale));padding:calc(9px * var(--ui-scale)) calc(20px * var(--ui-scale))}
+#top-bar{height:calc(40px * var(--ui-scale))}
+#direction-label{font-size:calc(9px * var(--ui-scale));letter-spacing:calc(2.5px * var(--ui-scale))}
+.ts-player{font-size:calc(9px * var(--ui-scale));padding:calc(2px * var(--ui-scale)) calc(9px * var(--ui-scale))}
+#log-text{font-size:calc(10px * var(--ui-scale))}
+#deck-count-lbl{font-size:calc(11px * var(--ui-scale))}
+.tbar-btn{font-size:calc(9px * var(--ui-scale));padding:calc(4px * var(--ui-scale)) calc(12px * var(--ui-scale))}
+.player-name{font-size:calc(9px * var(--ui-scale))}
+.badge{font-size:calc(9px * var(--ui-scale));padding:calc(1px * var(--ui-scale)) calc(7px * var(--ui-scale))}
+#status-bar{height:calc(22px * var(--ui-scale))}
+#status-text{font-size:calc(9px * var(--ui-scale))}
+#btn-sort-hand{font-size:calc(9px * var(--ui-scale));padding:calc(6px * var(--ui-scale)) calc(12px * var(--ui-scale))}
+#human-area{padding:calc(10px * var(--ui-scale)) 8px calc(8px * var(--ui-scale));gap:calc(7px * var(--ui-scale))}
+/* history panel offset tracks scaled top-bar */
+#history-panel{top:calc(40px * var(--ui-scale));max-height:calc(100vh - 40px * var(--ui-scale))}
+
+
 /* ── Landscape phone layout ── */
 @media(orientation:landscape) and (max-height:500px){
   :root{--cw:44px;--ch:63px;--cr:5px}
@@ -1349,6 +1429,11 @@ button{
         </select>
       </div>
       <div class="s-row">
+        <label>UI Scale</label>
+        <input type="range" id="set-ui-scale" min="75" max="150" value="100" step="5">
+        <span class="scale-val" id="set-ui-scale-val">100%</span>
+      </div>
+      <div class="s-row">
         <label>Card Scale</label>
         <input type="range" id="set-scale" min="60" max="130" value="100" step="5">
         <span class="scale-val" id="set-scale-val">100%</span>
@@ -1400,6 +1485,7 @@ button{
   <div id="go-card">
     <h2 id="go-title">Game Over</h2>
     <div id="go-order"></div>
+    <div id="go-avatars"></div>
     <button id="btn-restart">Play Again</button>
   </div>
 </div>
@@ -2242,6 +2328,48 @@ const EMOTE_SITUATIONS={
   bot_shithead:    {emotes:['😢','💀'],     chats:['Almost had it...']},
 };
 
+function buildGoAvatars(players){
+  const container=document.getElementById('go-avatars');
+  if(!container) return;
+  container.innerHTML='';
+  const sorted=[...players].sort(function(a,b){return (a.pos||99)-(b.pos||99);});
+  for(const p of sorted){
+    const slot=document.createElement('div');
+    slot.className='go-av-slot';
+    slot.dataset.name=p.name;
+
+    const av=document.createElement('div');
+    const pp=p.pos||players.length;
+    const isWinner=pp===1, isShit=pp===players.length;
+    av.className='go-av'+
+      (p.human?' av-human':'')+
+      (isWinner?' av-winner':'')+
+      (isShit?' av-shit':'');
+    av.textContent=p.human?'♠':(p.name.split(' ')[1]||p.name)[0].toUpperCase();
+
+    const nm=document.createElement('div');
+    nm.className='go-av-name';
+    nm.textContent=p.human?'You':p.name.split(' ')[1]||p.name;
+
+    slot.append(av,nm);
+    container.appendChild(slot);
+  }
+}
+
+function showAvatarEmote(playerName,content,isText){
+  const slot=document.querySelector('.go-av-slot[data-name="'+playerName+'"]');
+  if(!slot) return;
+  const av=slot.querySelector('.go-av');
+  // Remove any existing emote first
+  const old=av.querySelector('.go-av-emote');
+  if(old) old.remove();
+  const el=document.createElement('div');
+  el.className='go-av-emote'+(isText?' is-text':'');
+  el.textContent=content;
+  av.appendChild(el);
+  setTimeout(function(){el.remove();},3600);
+}
+
 function botSituationEmote(bot,situation,chance){
   if(Math.random()>(chance||0.6)) return;
   const pool=EMOTE_SITUATIONS[situation];
@@ -2250,7 +2378,11 @@ function botSituationEmote(bot,situation,chance){
   const src=useChat?pool.chats:pool.emotes;
   const content=src[Math.floor(Math.random()*src.length)];
   setTimeout(function(){
-    spawnEmoteBubble(content,useChat,bot.name,true);
+    if(G&&G.phase==='gameover'){
+      showAvatarEmote(bot.name,content,useChat);
+    } else {
+      spawnEmoteBubble(content,useChat,bot.name,true);
+    }
   },220+Math.random()*380);
 }
 
@@ -2622,6 +2754,7 @@ function endGame(){
     }
   }
 
+  buildGoAvatars(G.ps);
   document.getElementById('go-screen').classList.remove('hidden');
 }
 
@@ -2768,7 +2901,26 @@ window.addEventListener('DOMContentLoaded',function(){
     if(e.target===this) this.classList.add('hidden');
   });
 
-  // Scale slider
+  // UI scale slider
+  const uiScaleSlider=document.getElementById('set-ui-scale');
+  const uiScaleVal=document.getElementById('set-ui-scale-val');
+  uiScaleSlider.addEventListener('input',function(){
+    const v=parseInt(this.value)/100;
+    uiScaleVal.textContent=this.value+'%';
+    document.documentElement.style.setProperty('--ui-scale',v);
+    try{localStorage.setItem('shithead-ui-scale',this.value);}catch(e){}
+  });
+  // Restore saved UI scale
+  try{
+    const savedUI=localStorage.getItem('shithead-ui-scale');
+    if(savedUI){
+      uiScaleSlider.value=savedUI;
+      uiScaleVal.textContent=savedUI+'%';
+      document.documentElement.style.setProperty('--ui-scale',parseInt(savedUI)/100);
+    }
+  }catch(e){}
+
+  // Card scale slider
   const scaleSlider=document.getElementById('set-scale');
   const scaleVal=document.getElementById('set-scale-val');
   scaleSlider.addEventListener('input',function(){

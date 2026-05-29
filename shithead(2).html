@@ -1172,6 +1172,7 @@ button{
       <button class="menu-nav-link" onclick="showPage('guide')">Guide</button>
       <button class="menu-nav-link" onclick="showPage('history')">History</button>
       <button class="menu-nav-link" onclick="showPage('profile')">Profile</button>
+      <button class="menu-nav-link" id="nav-open-settings">Settings</button>
     </div>
   </nav>
 
@@ -2709,7 +2710,7 @@ window.addEventListener('DOMContentLoaded',function(){
   });
 
   // Settings panel
-  document.getElementById('btn-open-settings').addEventListener('click',function(){
+  function openSettings(){
     document.getElementById('settings-panel').classList.remove('hidden');
     const playing=G&&G.phase==='play';
     document.getElementById('fx-locked-note').style.display=playing?'block':'none';
@@ -2717,7 +2718,9 @@ window.addEventListener('DOMContentLoaded',function(){
       const sel=document.getElementById(EFFECT_SEL_IDS[fx]);
       if(sel) sel.disabled=playing;
     });
-  });
+  }
+  document.getElementById('btn-open-settings').addEventListener('click',openSettings);
+  document.getElementById('nav-open-settings').addEventListener('click',openSettings);
   document.getElementById('btn-settings-close').addEventListener('click',function(){
     document.getElementById('settings-panel').classList.add('hidden');
   });

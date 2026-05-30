@@ -1,10 +1,12 @@
-// Generates www/index.html from shithead(2).html by applying all iOS patches.
-// Run: node sync-www.js
+// Generates www/index.html from game/shithead(2).html by applying all iOS patches.
+// Run: node scripts/sync-www.js
 // Then: npx cap sync ios
 
 const fs = require('fs');
+const path = require('path');
+const root = path.resolve(__dirname, '..');
 
-let html = fs.readFileSync('shithead(2).html', 'utf8');
+let html = fs.readFileSync(path.join(root, 'game/shithead(2).html'), 'utf8');
 
 // ── 1. Viewport: add viewport-fit=cover ──────────────────────────────────────
 html = html.replace(
@@ -133,5 +135,5 @@ html = html.replace(
 });`
 );
 
-fs.writeFileSync('www/index.html', html);
-console.log('✓ www/index.html synced from shithead(2).html with iOS patches applied');
+fs.writeFileSync(path.join(root, 'www/index.html'), html);
+console.log('✓ www/index.html synced from game/shithead(2).html with iOS patches applied');

@@ -214,6 +214,15 @@ button{
   border:1px solid rgba(240,192,64,0.12);
   border-radius:2px;padding:1px 7px;letter-spacing:1.5px;
 }
+.badge.badge-last{
+  color:var(--gold);background:rgba(240,192,64,0.15);
+  border-color:rgba(240,192,64,0.55);
+  animation:last-card-pulse 0.85s ease-in-out infinite;
+}
+@keyframes last-card-pulse{
+  0%,100%{box-shadow:0 0 0 0 rgba(240,192,64,0.55)}
+  50%{box-shadow:0 0 0 6px rgba(240,192,64,0)}
+}
 .card-row{display:flex;gap:4px;align-items:flex-end;flex-wrap:nowrap}
 
 /* ══════════════════════════════════════
@@ -685,6 +694,16 @@ button{
   color:rgba(240,192,64,0.5);
   display:block;margin-bottom:10px;
 }
+.menu-play-panel .name-input{
+  width:100%;background:rgba(255,255,255,0.07);
+  border:1px solid rgba(240,192,64,0.22);
+  color:var(--tl);border-radius:4px;
+  padding:9px 12px;font-size:13px;
+  font-family:'Cinzel',serif;letter-spacing:1px;
+  outline:none;transition:border-color 0.2s;
+}
+.menu-play-panel .name-input:focus{border-color:rgba(240,192,64,0.55);}
+.menu-play-panel .name-input::placeholder{color:rgba(255,255,255,0.22);}
 .pcount{display:flex;gap:6px}
 .cbtn{
   flex:1;padding:11px 0;font-size:16px;font-weight:700;
@@ -1268,6 +1287,10 @@ button{font-size:calc(11px * var(--ui-scale));padding:calc(9px * var(--ui-scale)
 
     <div class="menu-play-panel">
       <div class="sfield">
+        <label>Your Name</label>
+        <input type="text" id="input-player-name" class="name-input" maxlength="12" placeholder="You" autocomplete="off" spellcheck="false">
+      </div>
+      <div class="sfield">
         <label>Number of Players</label>
         <div class="pcount">
           <button class="cbtn active" data-count="3">3</button>
@@ -1412,6 +1435,14 @@ button{font-size:calc(11px * var(--ui-scale));padding:calc(9px * var(--ui-scale)
         <select id="set-sfx">
           <option value="on">On</option>
           <option value="off">Off</option>
+        </select>
+      </div>
+      <div class="s-row">
+        <label>Bot Difficulty</label>
+        <select id="set-difficulty">
+          <option value="easy">Easy</option>
+          <option value="medium" selected>Medium</option>
+          <option value="hard">Hard</option>
         </select>
       </div>
     </div>
@@ -1583,6 +1614,7 @@ const BOTS = ['Alpha','Beta','Gamma','Delta','Epsilon'];
 const CFG = {
   scale: 70,
   handMode: 'row', // 'row' | 'fan'
+  difficulty: 'medium', // 'easy' | 'medium' | 'hard'
   // special card ranks (which rank does each effect)
   fx: {
     reset:       2,  // wild, resets constraint
@@ -1636,7 +1668,9 @@ function mkDeck(n){
 // ── State ────────────────────────────────────────────────────────
 function newGame(n){
   const dc=n<=4?1:2;
-  const ps=[{id:0,name:'You',human:true,hand:[],fu:[],bl:[],out:false,pos:null}];
+  const nameEl=document.getElementById('input-player-name');
+  const pName=(nameEl&&nameEl.value.trim())||'You';
+  const ps=[{id:0,name:pName,human:true,hand:[],fu:[],bl:[],out:false,pos:null}];
   for(let i=1;i<n;i++) ps.push({id:i,name:'Bot '+BOTS[i-1],human:false,hand:[],fu:[],bl:[],out:false,pos:null});
   return {ps,dc,deck:[],pile:[],dir:1,cur:0,phase:'swap',b7:false,fo:[],log:'',eff:null};
 }
@@ -2012,9 +2046,11 @@ function renderAI(){
 
     const nm=document.createElement('div');nm.className='player-name';
     nm.textContent=p.out?p.name+' ✓':p.name;
-    const bd=document.createElement('div');bd.className='badge';
+    const bd=document.createElement('div');
     const tot=p.hand.length+p.fu.length+p.bl.length;
-    bd.textContent=p.out?'OUT':''+tot;
+    const isLast=!p.out&&tot===1;
+    bd.className='badge'+(isLast?' badge-last':'');
+    bd.textContent=p.out?'OUT':isLast?'LAST!':''+tot;
     area.append(nm,bd);
 
     const br=document.createElement('div');br.className='card-row';
@@ -2087,6 +2123,13 @@ function renderHuman(){
   const lbl=document.createElement('div');lbl.className='player-name';
   lbl.textContent=isSwap?'YOUR HAND — click to swap':ph==='bl'?'FLIP A BLIND CARD':'YOUR HAND';
   hs.appendChild(lbl);
+  const humanTot=player.hand.length+player.fu.length+player.bl.length;
+  if(!isSwap&&humanTot===1){
+    const lb=document.createElement('div');
+    lb.className='badge badge-last';lb.style.alignSelf='center';
+    lb.textContent='LAST CARD!';
+    hs.appendChild(lb);
+  }
 
   if(CFG.handMode==='fan'&&(ph==='hand'||isSwap)){
     renderFanHand(hs,player,ph,isSwap,myTurn);
@@ -2390,7 +2433,15 @@ function aiPick(p){
   const allPlayable=Object.keys(byR).map(Number).filter(r=>canPlay({r},G));
   if(!allPlayable.length) return [];
 
+  // Easy: play a random legal card ~45% of the time
+  if(CFG.difficulty==='easy'&&Math.random()<0.45){
+    const lucky=allPlayable[Math.floor(Math.random()*allPlayable.length)];
+    return byR[lucky];
+  }
+
   const rb=getRankFX('burn10'),rs=getRankFX('skip');
+  // Hard bots burn more aggressively (pile >= 3 instead of 5)
+  const burnThreshold=CFG.difficulty==='hard'?3:5;
 
   // Regular (non-special) playable ranks sorted low→high
   const regular=allPlayable.filter(r=>aiPriority(r)<50).sort((a,b)=>a-b);
@@ -2418,7 +2469,7 @@ function aiPick(p){
   if(regular.length) return byR[regular[0]];
 
   // 4. No regular cards — fall back to tactical specials
-  if(G.pile.length>=5&&byR[rb]&&canPlay(byR[rb][0],G)) return byR[rb];
+  if(G.pile.length>=burnThreshold&&byR[rb]&&canPlay(byR[rb][0],G)) return byR[rb];
   if(npNext&&nextTotal<=3&&byR[rs]&&canPlay(byR[rs][0],G)) return byR[rs];
 
   // 5. Last resort: priority order
@@ -3072,6 +3123,21 @@ window.addEventListener('DOMContentLoaded',function(){
   const sfxSel=document.getElementById('set-sfx');
   sfxSel.addEventListener('change',function(){SFX.setEnabled(this.value==='on');});
   try{const s=localStorage.getItem('shithead-sfx');if(s==='0'){SFX.setEnabled(false);sfxSel.value='off';}}catch(e){}
+
+  // Bot difficulty
+  const diffSel=document.getElementById('set-difficulty');
+  diffSel.addEventListener('change',function(){
+    CFG.difficulty=this.value;
+    try{localStorage.setItem('shithead-difficulty',this.value);}catch(e){}
+  });
+  try{const d=localStorage.getItem('shithead-difficulty');if(d){CFG.difficulty=d;diffSel.value=d;}}catch(e){}
+
+  // Player name — restore saved name
+  const nameInput=document.getElementById('input-player-name');
+  try{const pn=localStorage.getItem('shithead-player-name');if(pn) nameInput.value=pn;}catch(e){}
+  nameInput.addEventListener('change',function(){
+    try{localStorage.setItem('shithead-player-name',this.value.trim());}catch(e){}
+  });
 
   // Button click sounds (delegated; skip buttons that have their own sounds)
   document.addEventListener('click',function(e){
